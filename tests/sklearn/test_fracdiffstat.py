@@ -3,9 +3,9 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
 
-from fracdiff.sklearn import Fracdiff
-from fracdiff.sklearn import FracdiffStat
-from fracdiff.sklearn.stat import StatTester
+from src.fracdiff.sklearn import Fracdiff
+from src.fracdiff.sklearn import FracdiffStat
+from src.fracdiff.sklearn.stat import StatTester
 
 
 class TestFracdiffStat:
@@ -100,7 +100,7 @@ class TestFracdiffStat:
 
     def test_import_deprecation(self):
         with pytest.raises(DeprecationWarning):
-            from fracdiff import FracdiffStat
+            from src.fracdiff import FracdiffStat
 
             _ = FracdiffStat()
 

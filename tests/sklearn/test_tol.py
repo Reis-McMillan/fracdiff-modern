@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from fracdiff.fdiff import fdiff_coef
-from fracdiff.sklearn.tol import window_from_tol_coef
-from fracdiff.sklearn.tol import window_from_tol_memory
+from src.fracdiff.fdiff import fdiff_coef
+from src.fracdiff.sklearn.tol import window_from_tol_coef
+from src.fracdiff.sklearn.tol import window_from_tol_memory
 
 
 class TestTol:

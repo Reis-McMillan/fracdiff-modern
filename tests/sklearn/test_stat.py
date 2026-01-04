@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from fracdiff.sklearn.stat import StatTester
+from src.fracdiff.sklearn.stat import StatTester
 
 
 class TestStat:

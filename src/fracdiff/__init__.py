@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .fdiff import fdiff
 from .sklearn.fracdiff import Fracdiff as _FracdiffSklearn
 from .sklearn.fracdiffstat import FracdiffStat as _FracdiffStatSklearn

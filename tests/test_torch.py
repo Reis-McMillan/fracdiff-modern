@@ -3,7 +3,7 @@ import pytest
 import torch
 from torch.testing import assert_close
 
-import src.fracdiff
+from src import fracdiff
 from src.fracdiff.torch import Fracdiff
 from src.fracdiff.torch import fdiff
 

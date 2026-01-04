@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
-from fracdiff import fdiff
-from fracdiff.sklearn import Fracdiff
+from src.fracdiff import fdiff
+from src.fracdiff.sklearn import Fracdiff
 
 
 class TestFracdiff:
@@ -24,7 +24,7 @@ class TestFracdiff:
 
     def test_import_deprecation(self):
         with pytest.raises(DeprecationWarning):
-            from fracdiff import Fracdiff
+            from src.fracdiff import Fracdiff
 
             _ = Fracdiff()
 
