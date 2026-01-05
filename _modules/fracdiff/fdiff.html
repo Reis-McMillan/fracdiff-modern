@@ -247,6 +247,22 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">binom</span>  <span class="c1"># type: ignore</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_boundary</span><span class="p">(</span>
+    <span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">boundary</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handles the broadcasting and shape validation for prepend/append arrays.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">boundary</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">boundary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">boundary</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">boundary</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">boundary</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">fdiff_coef</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns sequence of coefficients in fracdiff operator.</span>
 
@@ -372,52 +388,45 @@
         <span class="n">append</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">_NoValue</span> <span class="k">if</span> <span class="n">append</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">append</span>  <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="n">prepend</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">prepend</span><span class="o">=</span><span class="n">prepend</span> <span class="k">if</span> <span class="n">prepend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">_NoValue</span><span class="p">,</span>
+            <span class="n">append</span><span class="o">=</span><span class="n">append</span> <span class="k">if</span> <span class="n">append</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">_NoValue</span>
+        <span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;diff requires input that is at least one dimensional&quot;</span><span class="p">)</span>
 
-    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
     <span class="c1"># Mypy complains:</span>
     <span class="c1"># fracdiff/fdiff.py:135: error: Module has no attribute &quot;normalize_axis_index&quot;</span>
     <span class="n">axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">multiarray</span><span class="o">.</span><span class="n">normalize_axis_index</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
     <span class="n">dtype</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
 
-    <span class="n">combined</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">prepend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">prepend</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">prepend</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">prepend</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">prepend</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">prepend</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
-        <span class="n">combined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prepend</span><span class="p">)</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_prepare_boundary</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">prepend</span><span class="p">,</span> <span class="n">axis</span><span class="p">),</span>
+        <span class="n">a</span><span class="p">,</span>
+        <span class="n">_prepare_boundary</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">append</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
 
-    <span class="n">combined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">append</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">append</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">append</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">append</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">append</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">append</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
-        <span class="n">combined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">append</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+    <span class="c1"># 5. Core Fractional Differentiation Logic</span>
+    <span class="n">coef</span> <span class="o">=</span> <span class="n">fdiff_coef</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span>
-        <span class="n">D</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">,</span> <span class="n">fdiff_coef</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;valid&quot;</span><span class="p">)</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;same&quot;</span><span class="p">:</span>
-        <span class="c1"># Convolve with the mode &#39;full&#39; and cut last</span>
-        <span class="n">D</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">,</span> <span class="n">fdiff_coef</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">)</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="nb">slice</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">axis</span> <span class="k">else</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid mode: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mode</span><span class="p">))</span>
+        <span class="n">conv_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;valid&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">conv_func</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">a</span></div>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;same&quot;</span><span class="p">:</span>
+        <span class="n">conv_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">conv_func</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="c1"># Use a dynamic slice to trim the &#39;full&#39; convolution back to &#39;same&#39; size</span>
+        <span class="n">indexer</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">indexer</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">out</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">indexer</span><span class="p">)]</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid mode: </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 </pre></div>
         </article>

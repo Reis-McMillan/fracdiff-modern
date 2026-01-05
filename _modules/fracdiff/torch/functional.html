@@ -269,6 +269,22 @@
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">fdiff_coef_numpy</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">window</span><span class="p">))</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_boundary</span><span class="p">(</span>
+    <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">boundary</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensures prepend/append tensors match input dtype, device, and expected shape.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">boundary</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">boundary</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">boundary</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+        <span class="n">size</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">boundary</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">boundary</span>
+
+
 <div class="viewcode-block" id="fdiff">
 <a class="viewcode-back" href="../../../generated/fracdiff.torch.fdiff.html#fracdiff.torch.fdiff">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">fdiff</span><span class="p">(</span>
@@ -317,58 +333,55 @@
 <span class="sd">                [5.0000, 3.5000, 3.3750, 3.4375, 3.5547]])</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Calls torch.diff if n is an integer</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">n</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
         <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="n">prepend</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="n">append</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">dim</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-        <span class="c1"># TODO(simaki): Implement dim != -1. PR welcomed!</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only supports dim == -1.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">input</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
         <span class="nb">input</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">get_default_dtype</span><span class="p">())</span>
 
-    <span class="n">combined</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">prepend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">prepend</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">prepend</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">prepend</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
-            <span class="n">size</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">prepend</span> <span class="o">=</span> <span class="n">prepend</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
-        <span class="n">combined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prepend</span><span class="p">)</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span> <span class="k">if</span> <span class="n">dim</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">dim</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span>
 
-    <span class="n">combined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_prepare_boundary</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">prepend</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span>
+        <span class="nb">input</span><span class="p">,</span>
+        <span class="n">_prepare_boundary</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">append</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">append</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">append</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">append</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">append</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
-            <span class="n">size</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">append</span> <span class="o">=</span> <span class="n">append</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
-        <span class="n">combined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">append</span><span class="p">)</span>
+    <span class="c1"># 4. Dimension Shifting (Supports any dim by moving it to the end)</span>
+    <span class="c1"># We transpose &#39;dim&#39; to the last position, process, then transpose back.</span>
+    <span class="k">if</span> <span class="n">dim</span> <span class="o">!=</span> <span class="nb">input</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">input</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+    <span class="n">orig_shape</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># Flatten all dimensions except the last one for conv1d: (N, 1, L)</span>
+    <span class="n">input_reshaped</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">orig_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="n">input_size</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
-    <span class="nb">input</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">(),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-    <span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">(</span><span class="n">window</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="c1"># 5. Convolution Setup</span>
+    <span class="c1"># Fractional diff is a causal filter; we pad the beginning (left)</span>
+    <span class="n">input_padded</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">input_reshaped</span><span class="p">,</span> <span class="p">(</span><span class="n">window</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 
-    <span class="c1"># TODO(simaki): PyTorch Implementation to create weight</span>
+    <span class="c1"># Weight shape for conv1d: (out_channels, in_channels, kernel_width)</span>
+    <span class="c1"># We flip because convolution in PyTorch is cross-correlation</span>
     <span class="n">weight</span> <span class="o">=</span> <span class="n">fdiff_coef</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">conv1d</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">conv1d</span><span class="p">(</span><span class="n">input_padded</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
 
+    <span class="c1"># 6. Mode Slicing</span>
     <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;same&quot;</span><span class="p">:</span>
-        <span class="n">size_lastdim</span> <span class="o">=</span> <span class="n">input_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">L_out</span> <span class="o">=</span> <span class="n">orig_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span>
-        <span class="n">size_lastdim</span> <span class="o">=</span> <span class="n">input_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">L_out</span> <span class="o">=</span> <span class="n">orig_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid mode: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mode</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid mode: </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">output_size</span> <span class="o">=</span> <span class="n">input_size</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">size_lastdim</span><span class="p">,)</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">-</span><span class="n">size_lastdim</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output_size</span><span class="p">)</span>
+    <span class="c1"># Slice the last L_out elements</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">-</span><span class="n">L_out</span><span class="p">:]</span>
 
-    <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># 7. Reshape and Restore Dimension</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">orig_shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">L_out</span><span class="p">,))</span>
+    <span class="k">if</span> <span class="n">dim</span> <span class="o">!=</span> <span class="nb">input</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">output</span></div>
 
