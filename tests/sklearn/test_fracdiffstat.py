@@ -3,9 +3,9 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
 
-from src.fracdiff.sklearn import Fracdiff
-from src.fracdiff.sklearn import FracdiffStat
-from src.fracdiff.sklearn.stat import StatTester
+from fracdiff.sklearn import Fracdiff
+from fracdiff.sklearn import FracdiffStat
+from fracdiff.sklearn.stat import StatTester
 
 
 class TestFracdiffStat:

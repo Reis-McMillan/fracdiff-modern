@@ -1,4 +1,4 @@
-:github_url: https://github.com/fracdiff/fracdiff
+:github_url: https://github.com/Reis-McMillan/fracdiff
 
 Fracdiff Documentation
 ======================
@@ -53,4 +53,4 @@ PyTorch API
    :caption: Development
    :hidden:
 
-   GitHub <https://github.com/fracdiff/fracdiff>
+   GitHub <https://github.com/Reis-McMillan/fracdiff>

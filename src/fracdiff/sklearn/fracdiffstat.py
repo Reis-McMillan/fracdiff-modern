@@ -8,7 +8,7 @@ from sklearn.base import TransformerMixin  # type: ignore
 from sklearn.utils.validation import check_array  # type: ignore
 from sklearn.utils.validation import check_is_fitted  # type: ignore
 
-from src.fracdiff.fdiff import fdiff
+from fracdiff.fdiff import fdiff
 
 from .fracdiff import Fracdiff
 from .stat import StatTester

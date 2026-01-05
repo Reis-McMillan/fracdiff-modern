@@ -1,13 +1,6 @@
 # Fracdiff: Super-fast Fractional Differentiation
 
-[![python versions](https://img.shields.io/pypi/pyversions/fracdiff.svg)](https://pypi.org/project/fracdiff)
-[![version](https://img.shields.io/pypi/v/fracdiff.svg)](https://pypi.org/project/fracdiff)
-[![CI](https://github.com/fracdiff/fracdiff/actions/workflows/ci.yml/badge.svg)](https://github.com/fracdiff/fracdiff/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/fracdiff/fracdiff/branch/main/graph/badge.svg)](https://codecov.io/gh/fracdiff/fracdiff)
-[![dl](https://img.shields.io/pypi/dm/fracdiff)](https://pypi.org/project/fracdiff)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
-[Documentation](https://fracdiff.github.io/fracdiff/)
+[Documentation](https://github.io/Reis-McMillan/fracdiff/)
 
 ***Fracdiff*** performs fractional differentiation of time-series,
 a la "Advances in Financial Machine Learning" by M. Prado.
@@ -193,8 +186,7 @@ Example solutions of exercises in Section 5 of "Advances in Financial Machine Le
 
 Any contributions are more than welcome.
 
-The maintainer (simaki) is not making further enhancements and appreciates pull requests to make them.
-See [Issue](https://github.com/fracdiff/fracdiff/issues) for proposed features.
+See [Issue](https://github.com/Reis-McMillan/fracdiff/issues) for proposed features.
 Please take a look at [CONTRIBUTING.md](.github/CONTRIBUTING.md) before creating a pull request.
 
 ## References

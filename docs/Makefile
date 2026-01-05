@@ -9,7 +9,9 @@ SPHINXAUTOBUILD   ?= sphinx-autobuild
 SPHINXPROJ    ?= Fracdiff
 SOURCEDIR     = source
 BUILDDIR      = build
-RUN           = poetry run
+
+# Removed "poetry run" - now uses the active environment
+RUN           = 
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -24,8 +26,9 @@ help:
 
 .PHONY: clean
 clean:
-	@echo "Removing everything under 'build' and 'source/generated'.."
-	@rm -rf $(BUILDDIR)/html/ $(BUILDDIR)/doctrees $(SOURCEDIR)/generated
+	@echo "Cleaning up build and generated files..."
+	@rm -rf $(BUILDDIR)/*
+	@rm -rf $(SOURCEDIR)/generated/*
 
 .PHONY: livehtml
 livehtml:

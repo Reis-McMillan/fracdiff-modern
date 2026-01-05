@@ -3,9 +3,9 @@ import pytest
 import torch
 from torch.testing import assert_close
 
-from src import fracdiff
-from src.fracdiff.torch import Fracdiff
-from src.fracdiff.torch import fdiff
+import fracdiff
+from fracdiff.torch import Fracdiff
+from fracdiff.torch import fdiff
 
 
 class TestTorchFracdiff:

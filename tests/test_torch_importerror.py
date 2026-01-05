@@ -1,9 +1,7 @@
 import builtins
-import sys
 from unittest.mock import patch
 
 import numpy as np
-import pytest
 
 builtin_import = builtins.__import__
 
@@ -18,7 +16,6 @@ def import_except_torch(name, *args, **kwargs):
 def test_torch_importerror():
     with patch("builtins.__import__", import_except_torch):
         # one can use fdiff and Fracdiff since torch is optional
-        import src.fracdiff
         from src.fracdiff import fdiff
         from src.fracdiff.sklearn import Fracdiff
 

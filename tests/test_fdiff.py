@@ -7,8 +7,8 @@ from numpy.testing import assert_array_equal
 from numpy.testing import assert_equal
 from numpy.testing import assert_raises
 
-from src.fracdiff import fdiff
-from src.fracdiff.fdiff import fdiff_coef
+from fracdiff import fdiff
+from fracdiff.fdiff import fdiff_coef
 
 
 class TestFdiff:
@@ -83,9 +83,9 @@ class TestFdiff:
         diff = fdiff(a, n=n, window=window, axis=0)
 
         for i in range(n_features):
-            assert_array_equal(diff[window + n_blanks_1 :, i][:window], coef)
+            assert_array_equal(diff[window + n_blanks_1:, i][:window], coef)
             assert_equal(diff[: window + n_blanks_1], 0)
-            assert_equal(diff[window + n_blanks_1 + window :], 0)
+            assert_equal(diff[window + n_blanks_1 + window:], 0)
 
     @pytest.mark.parametrize("n", [0.5, 1.5])
     def test_axis(self, n):
@@ -112,11 +112,11 @@ class TestFdiff:
 
         out_s = fdiff(a, n, axis=0, window=window, mode="same")
         out_v = fdiff(a, n, axis=0, window=window, mode="valid")
-        assert_array_equal(out_s[window - 1 :, :], out_v)
+        assert_array_equal(out_s[window - 1:, :], out_v)
 
         out_s = fdiff(a, n, axis=1, window=window, mode="same")
         out_v = fdiff(a, n, axis=1, window=window, mode="valid")
-        assert_array_equal(out_s[:, window - 1 :], out_v)
+        assert_array_equal(out_s[:, window - 1:], out_v)
 
     @pytest.mark.parametrize("n", [0.5, 1.5])
     @pytest.mark.parametrize("window", [2])
