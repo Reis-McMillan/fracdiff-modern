@@ -23,4 +23,5 @@ class FracdiffStat(_FracdiffStatSklearn):
             "from fracdiff.sklearn import FracdiffStat"
         )
 
+
 __all__ = ["fdiff", "Fracdiff", "FracdiffStat"]

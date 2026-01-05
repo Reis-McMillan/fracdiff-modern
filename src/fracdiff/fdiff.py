@@ -7,6 +7,22 @@ import numpy as np
 from scipy.special import binom  # type: ignore
 
 
+def _prepare_boundary(
+    a: np.ndarray,
+    boundary: Optional[np.ndarray], axis: int
+) -> Optional[np.ndarray]:
+    """Handles the broadcasting and shape validation for prepend/append arrays."""
+    if boundary is None:
+        return None
+
+    boundary = np.asanyarray(boundary)
+    if boundary.ndim == 0:
+        shape = list(a.shape)
+        shape[axis] = 1
+        return np.broadcast_to(boundary, tuple(shape))
+    return boundary
+
+
 def fdiff_coef(d: float, window: int) -> np.ndarray:
     """Returns sequence of coefficients in fracdiff operator.
 
@@ -130,49 +146,42 @@ def fdiff(
         append = np._NoValue if append is None else append  # type: ignore
         return np.diff(a, n=int(n), axis=axis, prepend=prepend, append=append)
 
+    if float(n).is_integer():
+        return np.diff(
+            a, n=int(n), axis=axis,
+            prepend=prepend if prepend is not None else np._NoValue,
+            append=append if append is not None else np._NoValue
+        )
+
+    a = np.asanyarray(a)
     if a.ndim == 0:
         raise ValueError("diff requires input that is at least one dimensional")
 
-    a = np.asanyarray(a)
     # Mypy complains:
     # fracdiff/fdiff.py:135: error: Module has no attribute "normalize_axis_index"
     axis = np.core.multiarray.normalize_axis_index(axis, a.ndim)  # type: ignore
     dtype = a.dtype if np.issubdtype(a.dtype, np.floating) else np.float64
 
-    combined = []
-    if prepend is not None:
-        prepend = np.asanyarray(prepend)
-        if prepend.ndim == 0:
-            shape = list(a.shape)
-            shape[axis] = 1
-            prepend = np.broadcast_to(prepend, tuple(shape))
-        combined.append(prepend)
+    parts = [
+        _prepare_boundary(a, prepend, axis),
+        a,
+        _prepare_boundary(a, append, axis)
+    ]
+    a = np.concatenate([p for p in parts if p is not None], axis=axis)
 
-    combined.append(a)
-
-    if append is not None:
-        append = np.asanyarray(append)
-        if append.ndim == 0:
-            shape = list(a.shape)
-            shape[axis] = 1
-            append = np.broadcast_to(append, tuple(shape))
-        combined.append(append)
-
-    if len(combined) > 1:
-        a = np.concatenate(combined, axis)
+    # 5. Core Fractional Differentiation Logic
+    coef = fdiff_coef(n, window).astype(dtype)
 
     if mode == "valid":
-        D = partial(np.convolve, fdiff_coef(n, window).astype(dtype), mode="valid")
-        a = np.apply_along_axis(D, axis, a)
-    elif mode == "same":
-        # Convolve with the mode 'full' and cut last
-        D = partial(np.convolve, fdiff_coef(n, window).astype(dtype), mode="full")
-        s = tuple(
-            slice(a.shape[axis]) if i == axis else slice(None) for i in range(a.ndim)
-        )
-        a = np.apply_along_axis(D, axis, a)
-        a = a[s]
-    else:
-        raise ValueError("Invalid mode: {}".format(mode))
+        conv_func = partial(np.convolve, coef, mode="valid")
+        return np.apply_along_axis(conv_func, axis, a)
 
-    return a
+    if mode == "same":
+        conv_func = partial(np.convolve, coef, mode="full")
+        out = np.apply_along_axis(conv_func, axis, a)
+        # Use a dynamic slice to trim the 'full' convolution back to 'same' size
+        indexer = [slice(None)] * out.ndim
+        indexer[axis] = slice(0, a.shape[axis])
+        return out[tuple(indexer)]
+
+    raise ValueError(f"Invalid mode: {mode}")

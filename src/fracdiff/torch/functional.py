@@ -29,6 +29,22 @@ def fdiff_coef(d: float, window: int) -> Tensor:
     return torch.as_tensor(fdiff_coef_numpy(d, window))
 
 
+def _prepare_boundary(
+    input: Tensor,
+    boundary: Optional[Tensor], dim: int
+) -> Optional[Tensor]:
+    """Ensures prepend/append tensors match input dtype, device, and expected shape."""
+    if boundary is None:
+        return None
+
+    boundary = torch.as_tensor(boundary).to(input)
+    if boundary.dim() == 0:
+        size = list(input.size())
+        size[dim] = 1
+        return boundary.broadcast_to(torch.Size(size))
+    return boundary
+
+
 def fdiff(
     input: Tensor,
     n: float,
@@ -75,57 +91,54 @@ def fdiff(
                 [5.0000, 3.5000, 3.3750, 3.4375, 3.5547]])
     """
     # Calls torch.diff if n is an integer
-    if isinstance(n, int) or n.is_integer():
+    if float(n).is_integer():
         return input.diff(n=int(n), dim=dim, prepend=prepend, append=append)
-
-    if dim != -1:
-        # TODO(simaki): Implement dim != -1. PR welcomed!
-        raise ValueError("Only supports dim == -1.")
 
     if not input.is_floating_point():
         input = input.to(torch.get_default_dtype())
 
-    combined = []
-    if prepend is not None:
-        prepend = torch.as_tensor(prepend).to(input)
-        if prepend.dim() == 0:
-            size = list(input.size())
-            size[dim] = 1
-            prepend = prepend.broadcast_to(torch.Size(size))
-        combined.append(prepend)
+    dim = dim if dim >= 0 else dim + input.dim()
 
-    combined.append(input)
+    parts = [
+        _prepare_boundary(input, prepend, dim),
+        input,
+        _prepare_boundary(input, append, dim)
+    ]
+    input = torch.cat([p for p in parts if p is not None], dim=dim)
 
-    if append is not None:
-        append = torch.as_tensor(append).to(input)
-        if append.dim() == 0:
-            size = list(input.size())
-            size[dim] = 1
-            append = append.broadcast_to(torch.Size(size))
-        combined.append(append)
+    # 4. Dimension Shifting (Supports any dim by moving it to the end)
+    # We transpose 'dim' to the last position, process, then transpose back.
+    if dim != input.dim() - 1:
+        input = input.transpose(dim, -1)
 
-    if len(combined) > 1:
-        input = torch.cat(combined, dim=dim)
+    orig_shape = input.shape
+    # Flatten all dimensions except the last one for conv1d: (N, 1, L)
+    input_reshaped = input.reshape(-1, 1, orig_shape[-1])
 
-    input_size = input.size()
-    input = input.reshape(input[..., 0].numel(), 1, input_size[-1])
-    input = torch.nn.functional.pad(input, (window - 1, 0))
+    # 5. Convolution Setup
+    # Fractional diff is a causal filter; we pad the beginning (left)
+    input_padded = torch.nn.functional.pad(input_reshaped, (window - 1, 0))
 
-    # TODO(simaki): PyTorch Implementation to create weight
+    # Weight shape for conv1d: (out_channels, in_channels, kernel_width)
+    # We flip because convolution in PyTorch is cross-correlation
     weight = fdiff_coef(n, window).to(input).reshape(1, 1, -1).flip(-1)
 
-    output = torch.nn.functional.conv1d(input, weight)
+    output = torch.nn.functional.conv1d(input_padded, weight)
 
+    # 6. Mode Slicing
     if mode == "same":
-        size_lastdim = input_size[-1]
+        L_out = orig_shape[-1]
     elif mode == "valid":
-        size_lastdim = input_size[-1] - window + 1
+        L_out = orig_shape[-1] - window + 1
     else:
-        raise ValueError("Invalid mode: " + str(mode))
+        raise ValueError(f"Invalid mode: {mode}")
 
-    output_size = input_size[:-1] + (size_lastdim,)
-    output = output[..., -size_lastdim:].reshape(output_size)
+    # Slice the last L_out elements
+    output = output[..., -L_out:]
 
-    output = output.transpose(dim, -1)
+    # 7. Reshape and Restore Dimension
+    output = output.reshape(orig_shape[:-1] + (L_out,))
+    if dim != input.dim() - 1:
+        output = output.transpose(dim, -1)
 
     return output

@@ -150,7 +150,7 @@ class FracdiffStat(TransformerMixin, BaseEstimator):
 
         for i in range(X.shape[1]):
             f = Fracdiff(self.d_[i], window=self.window, mode=self.mode)
-            d = f.fit_transform(X[:, [i]])[-out.shape[0] :]
+            d = f.fit_transform(X[:, [i]])[-out.shape[0]:]
             out = np.concatenate((out, d), 1)
 
         return out

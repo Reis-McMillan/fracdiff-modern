@@ -1,8 +1,8 @@
-# Fracdiff: Super-fast Fractional Differentiation
+# Fracdiff-Modern: Super-fast Fractional Differentiation
 
-[Documentation](https://github.io/Reis-McMillan/fracdiff/)
+[Documentation](https://github.io/Reis-McMillan/fracdiff-modern/)
 
-***Fracdiff*** performs fractional differentiation of time-series,
+***Fracdiff-Modern*** performs fractional differentiation of time-series,
 a la "Advances in Financial Machine Learning" by M. Prado.
 Fractional differentiation processes time-series to a stationary one while preserving memory in the original time-series.
 Fracdiff features super-fast computation and scikit-learn compatible API.
@@ -29,11 +29,11 @@ pip install fracdiff
 - [`torch.fdiff`][doc-torch.fdiff]: A functional that extends [`torch.diff`](https://pytorch.org/docs/stable/generated/torch.diff.html) to fractional differentiation.
 - [`torch.Fracdiff`][doc-torch.Fracdiff]: A module that computes fractional differentiation.
 
-[doc-fdiff]: https://fracdiff.github.io/fracdiff/generated/fracdiff.fdiff.html
-[doc-sklearn.Fracdiff]: https://fracdiff.github.io/fracdiff/generated/fracdiff.sklearn.Fracdiff.html
-[doc-sklearn.FracdiffStat]: https://fracdiff.github.io/fracdiff/generated/fracdiff.sklearn.FracdiffStat.html
-[doc-torch.fdiff]: https://fracdiff.github.io/fracdiff/generated/fracdiff.torch.fdiff.html
-[doc-torch.Fracdiff]: https://fracdiff.github.io/fracdiff/generated/fracdiff.torch.Fracdiff.html
+[doc-fdiff]: https://reis.github.io/fracdiff/generated/fracdiff.fdiff.html
+[doc-sklearn.Fracdiff]: https://reis-mcmillan.github.io/fracdiff-modern/generated/fracdiff.sklearn.Fracdiff.html
+[doc-sklearn.FracdiffStat]: https://reis-mcmillan.github.io/fracdiff-modern/generated/fracdiff.sklearn.FracdiffStat.html
+[doc-torch.fdiff]: https://reis-mcmillan.github.io/fracdiff-modern/generated/fracdiff.torch.fdiff.html
+[doc-torch.Fracdiff]: https://reis-mcmillan.github.io/fracdiff-modern/generated/fracdiff.torch.Fracdiff.html
 
 ### Speed
 
@@ -69,7 +69,7 @@ The following tables of execution times (in unit of ms) show that *Fracdiff* can
 
 ### Fractional differentiation
 
-A function [`fdiff`](https://fracdiff.github.io/fracdiff/#fdiff) calculates fractional differentiation.
+A function [`fdiff`](https://reis-mcmilan.github.io/fracdiff-modern/#fdiff) calculates fractional differentiation.
 This is an extension of `numpy.diff` to a fractional order.
 
 ```python
@@ -95,7 +95,7 @@ fdiff(a, 0.5, axis=-1)
 
 #### Preprocessing by fractional differentiation
 
-A transformer class [`Fracdiff`](https://fracdiff.github.io/fracdiff/#id1) performs fractional differentiation by its method `transform`.
+A transformer class [`Fracdiff`](https://reis-mcmillan.github.io/fracdiff-modern/#id1) performs fractional differentiation by its method `transform`.
 
 ```python
 from fracdiff.sklearn import Fracdiff
@@ -110,7 +110,7 @@ For example, 0.5th differentiation of S&P 500 historical price looks like this:
 
 ![spx](./examples/fig/spx.png)
 
-[`Fracdiff`](https://fracdiff.github.io/fracdiff/#id1) is compatible with scikit-learn API.
+[`Fracdiff`](https://reis-mcmillan.github.io/fracdiff-modern/#id1) is compatible with scikit-learn API.
 One can imcorporate it into a pipeline.
 
 ```python
@@ -130,7 +130,7 @@ pipeline.fit(X, y)
 
 #### Fractional differentiation while preserving memory
 
-A transformer class [`FracdiffStat`](https://fracdiff.github.io/fracdiff/#fracdiffstat) finds the minumum order of fractional differentiation that makes time-series stationary.
+A transformer class [`FracdiffStat`](https://reis-mcmillan.github.io/fracdiff-modern/#fracdiffstat) finds the minumum order of fractional differentiation that makes time-series stationary.
 Differentiated time-series with this order is obtained by subsequently applying `transform` method.
 This series is interpreted as a stationary time-series keeping the maximum memory of the original time-series.
 

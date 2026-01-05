@@ -28,7 +28,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Install the package with extras + sphinx for building docs
-          pip install .[sklearn,torch]
+          pip install -e .[sklearn,torch]
           pip install sphinx furo
 
       - name: Build HTML
