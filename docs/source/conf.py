@@ -16,7 +16,7 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = "fracdiff-modern"
-copyright = "2021, Shota Imaki"
+copyright = "2021, Shota Imaki; 2026, Reis McMillan"
 author = "Shota Imaki"
 
 
