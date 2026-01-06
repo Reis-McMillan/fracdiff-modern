@@ -10,7 +10,7 @@ Install
 
 .. code-block:: none
 
-    pip install fracdiff
+    pip install fracdiff-modern
 
 
 NumPy API
