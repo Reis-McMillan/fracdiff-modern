@@ -1,7 +1,7 @@
-:github_url: https://github.com/Reis-McMillan/fracdiff
+:github_url: https://github.com/Reis-McMillan/fracdiff-modern
 
-Fracdiff Documentation
-======================
+Fracdiff-Modern Documentation
+=============================
 
 Compute fractional differentiation super-fast.
 
@@ -53,4 +53,4 @@ PyTorch API
    :caption: Development
    :hidden:
 
-   GitHub <https://github.com/Reis-McMillan/fracdiff>
+   GitHub <https://github.com/Reis-McMillan/fracdiff-modern>
